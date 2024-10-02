@@ -195,7 +195,6 @@
 				for (let additive of additiveDatabase) {
 					const additiveCode = additive.code.toLowerCase().replace(/\s+/g, '');
 					const additiveName = additive.name.toLowerCase().replace(/\s+/g, '');
-					console.log(`Comparing ingredient: ${cleanedIngredient} with additive: ${additiveName}`);
 					// Check if the current additive name (or code) is completely contained in the ingredient
 					if (cleanedIngredient.includes(additiveName) || cleanedIngredient.includes(additiveCode)) {
 						// If this additive name is longer than the previous longest match, update
