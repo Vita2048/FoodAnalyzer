@@ -173,28 +173,48 @@
 			
         }
 
-        async function analyzeIngredients() {
-            let ingredientsInput = document.getElementById('ingredientsInput').value.toLowerCase();
-            const ingredients = ingredientsInput.split(',').map(item => item.trim());
+		async function analyzeIngredients() {
+			// Get the input ingredients and convert to lowercase
+			let ingredientsInput = document.getElementById('ingredientsInput').value.toLowerCase();
 
-            const translatedIngredients = await Promise.all(ingredients.map(async (ingredient) => {
-                return await translateText(ingredient);
-            }));
+			// Translate ingredients before splitting them
+			const translatedInput = await translateText(ingredientsInput);
+			
+			// Split the translated input into an array of ingredients
+			const ingredients = translatedInput.split(',').map(item => item.trim());
 
-            const foundAdditives = new Map();
-            translatedIngredients.forEach(ingredient => {
-                additiveDatabase.forEach(additive => {
-                    const additiveCode = additive.code.toLowerCase().replace(/\s+/g, '');
-                    const additiveName = additive.name.toLowerCase();
-                    const cleanedIngredient = ingredient.replace(/\s+/g, '');
-                    if (cleanedIngredient.includes(additiveCode) || ingredient.includes(additiveName)) {
-                        foundAdditives.set(additive.code, additive);
-                    }
-                });
-            });
+			const foundAdditives = new Map();
 
-            displayResults(Array.from(foundAdditives.values()));
-        }
+			for (let ingredient of ingredients) {
+				let longestMatch = null;
+				let longestMatchName = '';
+
+				// Remove all spaces from the ingredient for comparison
+				const cleanedIngredient = ingredient.replace(/\s+/g, '');
+
+				for (let additive of additiveDatabase) {
+					const additiveCode = additive.code.toLowerCase().replace(/\s+/g, '');
+					const additiveName = additive.name.toLowerCase().replace(/\s+/g, '');
+					console.log(`Comparing ingredient: ${cleanedIngredient} with additive: ${additiveName}`);
+					// Check if the current additive name (or code) is completely contained in the ingredient
+					if (cleanedIngredient.includes(additiveName) || cleanedIngredient.includes(additiveCode)) {
+						// If this additive name is longer than the previous longest match, update
+						if (additiveName.length > longestMatchName.length) {
+							longestMatch = additive;
+							longestMatchName = additiveName;
+						}
+					}
+				}
+
+				if (longestMatch) {
+					// Only add the longest matching additive to the map
+					foundAdditives.set(longestMatch.code, longestMatch);
+				}
+			}
+
+			// Display the results of found additives
+			displayResults(Array.from(foundAdditives.values()));
+		}
 
         function displayResults(additives) {
             const resultsDiv = document.getElementById('results');
