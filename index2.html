@@ -148,7 +148,8 @@
 
 		// Function to handle translation using LibreTranslate API
 		async function translateText(text) {
-			const url = 'https://libretranslate.de/translate';  // LibreTranslate API endpoint
+			const url = 'https://cors-anywhere.herokuapp.com/https://libretranslate.de/translate';
+
 
 			try {
 				const response = await fetch(url, {
