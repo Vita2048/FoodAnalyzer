@@ -191,7 +191,7 @@
 
 				// Remove all spaces from the ingredient for comparison
 				const cleanedIngredient = ingredient.toLowerCase().replace(/e\s*(\d{3}[a-z]?)/g, (_, num) => `e${num}`);
-				console.log(`Clean ingredient: ${cleanedIngredient}`);
+				
 
 				for (let additive of additiveDatabase) {
 					const additiveCode = additive.code.toLowerCase();
