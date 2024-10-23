@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Additive Analyzer</title>
+    <link rel="icon" href="FoodAnalyzer.ico" type="image/x-icon">	
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        textarea {
+            width: 100%;
+			height: 150px;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #0000f5;
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: block;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #0000f5;
+			color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px 15px;
+        }
+        .centered-text {
+            text-align: center;
+        }
+        .safety-score-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+        .safety-score-table th,
+        .safety-score-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        .safety-score-table th {
+            background-color: #0000f5;
+            color: white;
+            font-weight: bold;
+        }
+        .safety-score-table__score {
+            text-align: center;
+        }
+        .gauge-wrapper {
+            width: 40px;
+            height: 35px;
+            margin: 0 auto;
+        }
+        .gauge-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+		.background-section {
+            background-image: url('FoodAnalyzer.jpg');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.6;
+            position: relative;
+            padding: 50px;
+            text-align: center;
+            color: black;
+        }
+        .background-content {
+            position: relative;
+            z-index: 1;
+        }
+        .background-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.4);
+        }		
+    </style>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+</head>
+<body>
+    <div class="background-section">
+        <div class="background-content">
+            <h1>Food Additive Analyzer</h1>
+        </div>
+    </div>
+	
+    <p id="dbStatus"></p>
+    <textarea id="ingredientsInput" placeholder="Enter food ingredients, separated by commas" rows="3"></textarea>
+    <button onclick="analyzeIngredients()">Analyze</button>
+    <div id="results"></div>
+
+    <script>
+        let additiveDatabase = [];
+
+		function loadCSV() {
+			Papa.parse("Additives.csv", {
+				download: true,
+				header: true,
+				skipEmptyLines: true,
+				complete: function(results) {
+					if (results.data.length === 0) {
+						console.error("No data found in the CSV file.");
+					} else {
+						console.log("CSV data loaded: ", results.data); // Debugging line
+						additiveDatabase = results.data.map(row => ({
+							code: row.Code.trim(),
+							name: row.Name.trim(),
+							severity: row.Severity.trim()
+						}));
+
+						console.log("Parsed additives: ", additiveDatabase); // Debugging line
+						document.getElementById('dbStatus').textContent = `Database loaded with ${additiveDatabase.length} additives`;
+					}
+				},
+				error: function(err) {
+					console.error("Error loading CSV: ", err);
+				}
+			});
+		}
+
+        async function translateText(text) {
+            const apiKey = 'AIzaSyAfkZRYmBxK11hhRffEdfNPi6YC4x_wc28';
+            const url = `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`;
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        q: text,
+                        target: 'en'
+                    })
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                if (!data.data || !data.data.translations || !data.data.translations[0]) {
+                    throw new Error('Unexpected response format');
+                }
+                return data.data.translations[0].translatedText;
+            } catch (error) {
+                console.error('Error translating text:', error);
+                return text; // Fallback to original text if translation fails
+            }
+			
+        }
+
+		async function analyzeIngredients() {
+			// Get the input ingredients and convert to lowercase
+			let ingredientsInput = document.getElementById('ingredientsInput').value.toLowerCase();
+
+			// Translate ingredients before splitting them
+			const translatedInput = await translateText(ingredientsInput);
+			
+			// Split the translated input into an array of ingredients
+			const ingredients = translatedInput.split(',').map(item => item.trim());
+
+			const foundAdditives = new Map();
+
+			for (let ingredient of ingredients) {
+				let longestMatch = null;
+				let longestMatchName = '';
+
+				// Remove all spaces from the ingredient for comparison
+				const cleanedIngredient = ingredient.toLowerCase().replace(/e\s*(\d{3}[a-z]?)/g, (_, num) => `e${num}`);
+				
+
+				for (let additive of additiveDatabase) {
+					const additiveCode = additive.code.toLowerCase();
+					const additiveName = additive.name.toLowerCase();
+					//console.log(`Comparing ingredient: ${cleanedIngredient} with additive: ${additiveName}`);
+					// Check if the current additive name (or code) is completely contained in the ingredient
+					if (cleanedIngredient.includes(additiveName) || cleanedIngredient.includes(additiveCode)) {
+						// If this additive name is longer than the previous longest match, update
+						if (additiveName.length > longestMatchName.length) {
+							longestMatch = additive;
+							longestMatchName = additiveName;
+						}
+					}
+				}
+
+				if (longestMatch) {
+					// Only add the longest matching additive to the map
+					foundAdditives.set(longestMatch.code, longestMatch);
+				}
+			}
+
+			// Display the results of found additives
+			displayResults(Array.from(foundAdditives.values()));
+		}
+
+        function displayResults(additives) {
+            const resultsDiv = document.getElementById('results');
+            if (additives.length === 0) {
+                resultsDiv.innerHTML = '<h2 class="centered-text"><strong>No additives found in the ingredient list.</strong></h2>';
+                return;
+            }
+            let tableHtml = `
+                <style>
+                    .results-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+                    .results-table th, .results-table td {
+                        border: 1px solid #ddd;
+                        padding: 8px;
+                    }
+                    .center-align {
+                        text-align: center;
+                    }
+                </style>
+                <h2>Found Additives:</h2>
+                <table class="results-table">
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th class="center-align">Severity</th>
+                    </tr>
+            `;
+            additives.forEach(additive => {
+                tableHtml += `
+                    <tr>
+                        <td><a href="https://www.ferpotravina.cz/seznam-ecek/${additive.code}">${additive.code}</a></td>
+                        <td>${additive.name}</td>
+                        <td class="center-align">
+                            <div class="gauge-wrapper">
+                                <img src="vertical-gauge-${additive.severity}.svg" alt="Severity ${additive.severity}">
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            tableHtml += '</table>';
+            resultsDiv.innerHTML = tableHtml;
+        }
+
+        window.onload = loadCSV;
+    </script>
+
+    <div class="container">
+        <h2 class="centered-text">Scale of harmfulness of <strong>food additives</strong></h2>
+        <div class="safety-score-stripe__left-column">
+            <table class="safety-score-table">
+                <thead>
+                    <tr>
+                        <th>Severity</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="safety-score-table__score">
+                            <div class="gauge-wrapper">
+                                <img src="vertical-gauge-0.svg" alt="Severity 0">
+                            </div>
+                        </td>
+                        <td class="safety-score-table__description">Natural substance, obtained naturally</td>
+                    </tr>
+                    <tr>
+                        <td class="safety-score-table__score">
+                            <div class="gauge-wrapper">
+                                <img src="vertical-gauge-1.svg" alt="Severity 1">
+                            </div>
+                        </td>
+                        <td class="safety-score-table__description">Naturally occurring substance obtained synthetically</td>
+                    </tr>
+                    <tr>
+                        <td class="safety-score-table__score">
+                            <div class="gauge-wrapper">
+                                <img src="vertical-gauge-2.svg" alt="Severity 2">
+                            </div>
+                        </td>
+                        <td class="safety-score-table__description">Synthetic ingredient, no known side effects</td>
+                    </tr>
+                    <tr>
+                        <td class="safety-score-table__score">
+                            <div class="gauge-wrapper">
+                                <img src="vertical-gauge-3.svg" alt="Severity 3">
+                            </div>
+                        </td>
+                        <td class="safety-score-table__description">Ingredient not suitable for children, allergy sufferers, people sensitive to chemicals in food, ...</td>
+                    </tr>
+                    <tr>
+                        <td class="safety-score-table__score">
+                            <div class="gauge-wrapper">
+                                <img src="vertical-gauge-4.svg" alt="Severity 4">
+                            </div>
+                        </td>
+                        <td class="safety-score-table__description">Ingredient suspected of causing allergies, hyperactivity, ...</td>
+                    </tr>
+                    <tr>
+                        <td class="safety-score-table__score">
+                            <div class="gauge-wrapper">
+                                <img src="vertical-gauge-5.svg" alt="Severity 5">
+                            </div>
+                        </td>
+                        <td class="safety-score-table__description">Ingredient likely to cause allergies, hyperactivity, ...</td>
+                    </tr>
+                    <tr>
+                        <td class="safety-score-table__score">
+                            <div class="gauge-wrapper">
+                                <img src="vertical-gauge-6.svg" alt="Severity 6">
+                            </div>
+                        </td>
+                        <td class="safety-score-table__description">Ingredient that may have carcinogenic effects</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html
