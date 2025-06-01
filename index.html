@@ -181,7 +181,7 @@
 			const translatedInput = await translateText(ingredientsInput);
 			
 			// Split the translated input into an array of ingredients
-			const ingredients = translatedInput.split(',').map(item => item.trim());
+			const ingredients = translatedInput.split(/[,;:]/).map(item => item.trim());
 
 			const foundAdditives = new Map();
 
