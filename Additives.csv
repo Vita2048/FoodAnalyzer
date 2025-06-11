@@ -79,6 +79,7 @@ E163,Anthocyanins,0
 E164,"Saffron, Saffron yellow",0
 E166,Sandalwood,0
 E170,Calcium carbonates,0
+E170,Calcium carbonate,0
 E171,Titanium dioxide,4
 E172,Iron oxides and hydroxides,2
 E173,Aluminum ( CI metallic pigment ),4
@@ -167,9 +168,12 @@ E330,Citric acid,0
 E331,Sodium citrates,1
 E331,Sodium citrate,1
 E332,Potassium citrates,1
+E332,Potassium citrate,1
 E333,Calcium Citronates,1
+E333,Calcium Citronate,1
 E334,Tartaric acid,1
 E335,Sodium tartrates,2
+E335,Sodium tartrate,2
 E336,Potassium hydrogen tartrate,0
 E336,Potassium tartrates,0
 E336,Potassium tartrate,0
@@ -179,13 +183,17 @@ E339,Sodium phosphates,2
 E339,Sodium phosphate,2
 E339,Sodium dihydrogen phosphate,2
 E340,Potassium phosphates,2
+E340,Potassium phosphate,2
 E340(i),Potassium dihydrogen phosphate,2
 E340(ii),Potassium monohydrogen phosphate,2
 E340(iii),Potassium phosphate,2
 E341,Calcium phosphate,2
 E341,Calcium phosphates,2
+E341,Calcium phosphate,2
 E342,Ammonium phosphates,2
+E342,Ammonium phosphate,2
 E343,Magnesium phosphates,2
+E343,Magnesium phosphate,2
 E350,Apple cider sodium,2
 E351,Potassium malate,1
 E352,Calcareous apples,1
@@ -292,8 +300,10 @@ E500,Sodium carbonate,1
 E500,Sodium bicarbonate,1
 E500,Sodium sequicarbonate,1
 E501,Potassium carbonates,2
+E501,Potassium carbonate,2
 E503,Ammonium carbonate,2
 E504,Magnesium carbonates,1
+E504,Magnesium carbonate,1
 E507,Hydrochloric acid,2
 E508,Potassium chloride,2
 E509,Calcium chloride,1
@@ -302,7 +312,9 @@ E511,Magnesium chloride,1
 E512,Stannous chloride,4
 E513,Sulfuric acid,2
 E514,Sodium sulfates,1
+E514,Sodium sulfate,1
 E515,Potassium sulfates,1
+E515,Potassium sulfate,1
 E516,Calcium sulfate,1
 E517,Ammonium sulfate,2
 E518,Magnesium sulfate,1
@@ -404,6 +416,7 @@ E949,Hydrogen,1
 E950,Acesulfame K,4
 E951,Aspartame,5
 E952,Cyclamates,6
+E952,Cyclamate,6
 E953,Isomalt,1
 E954,Saccharin and its salts,5
 E955,Sucralose,2
